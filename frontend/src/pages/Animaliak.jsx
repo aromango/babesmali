@@ -15,7 +15,6 @@ function Animaliak() {
 
     const fetchData = async () => {
       try {
-        
         const userRes = await fetch("http://localhost:8000/api/user", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -24,7 +23,6 @@ function Animaliak() {
         });
         setUser(await userRes.json());
 
-        
         const animalsRes = await fetch("http://localhost:8000/api/animals", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -33,7 +31,6 @@ function Animaliak() {
         });
         setAnimals(await animalsRes.json());
 
-        
         const adoptionsRes = await fetch("http://localhost:8000/api/adopzioak", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -51,8 +48,42 @@ function Animaliak() {
     fetchData();
   }, [token]);
 
-  const hasRequested = (animalId) =>
-    myAdoptions.some((a) => a.animal.id === animalId);
+  
+const hasRequested = (animalId) =>
+  myAdoptions.some((a) =>
+    a.animal ? a.animal.id === animalId : a.animal_id === animalId
+  );
+
+
+  
+  const eskatuAdopzioa = async (animalId) => {
+    try {
+      const res = await fetch("http://localhost:8000/api/adopzioak", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          animal_id: animalId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Errorea adopzioa eskatzean");
+        return;
+      }
+
+      alert("✅ Adopzioa behar bezala eskatuta");
+      setMyAdoptions([...myAdoptions, data]);
+    } catch (error) {
+      console.error(error);
+      alert("Errorea zerbitzariarekin");
+    }
+  };
 
   if (!token) {
     return (
@@ -106,7 +137,6 @@ function Animaliak() {
               <td>{animal.arraza || "-"}</td>
               <td>{animal.adina}</td>
               <td>{animal.egoera}</td>
-
               <td>
                 {user?.role === "admin" ? (
                   <span className="text-muted">—</span>
@@ -115,7 +145,10 @@ function Animaliak() {
                 ) : hasRequested(animal.id) ? (
                   <span className="text-warning">Adopzioa eskatuta</span>
                 ) : (
-                  <button className="btn btn-sm btn-success">
+                  <button
+                    className="btn btn-sm btn-success"
+                    onClick={() => eskatuAdopzioa(animal.id)}
+                  >
                     Eskatu adopzioa
                   </button>
                 )}
@@ -129,3 +162,4 @@ function Animaliak() {
 }
 
 export default Animaliak;
+
